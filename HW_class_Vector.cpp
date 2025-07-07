@@ -1,16 +1,16 @@
-﻿
-
 #include <iostream>
 #include <windows.h>
 #include <algorithm>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
 class Vector {
 
-	unsigned int capacity = 10; // при створенні масиву, він одразу для себе робить запас пам'яті на 10 елементів
+	unsigned int capacity = 10;					// стартовий запас пам'яті (10 елементів)
 	int* data = new int[capacity];
-	unsigned int length = 0; // фактична (реальна) кількість елементів, присутніх у масиві
+	unsigned int length = 0;					// фактична кількість елементів, присутніх у масиві
 
 public:
 	Vector() {}
@@ -25,23 +25,24 @@ public:
 		for (int i = 0; i < length; i++) this->data[i] = original.data[i];
 	}
 
+	int Getlength() const {
+		return length;
+	}
+
 	void AddToBack(int value) {
-		if (length < capacity) // якщо виділенної зарання пам'яті ВИСТАЧАЄ для додавання чергового елемента
+		if (length < capacity)						// якщо виділенної пам'яті ВИСТАЧАЄ для додавання чергового елемента
 			data[length] = value;
-		else { // АЛЕ ЯКЩО МІСЦЯ ВЖЕ НЕ ВИСТАЧАЄ, ТО
-			// треба перевиділити пам'ять
-			capacity *= 2; // збільшуємо запас пам'яті у 2 рази (можна і в 1.5, можна і в 1.2)
-			// якщо був запас 10 елементів, то стане 20
-			// якщо запас був 20 елементів, то стане 40, і тд
-			int* temp = new int[capacity]; // новий масив буде в 2 рази більше по пам'яті
-			// але в старому масиві все ще усього 10 елементів, тому цикл треба написати так, щоб зачепити лише старі елементі зі старого масиву
+		else { 
+			
+			capacity *= 2;							// збільшуємо запас пам'яті у 2 рази 
+			int* temp = new int[capacity]; 
 			for (int i = 0; i < length; i++) {
 				temp[i] = data[i];
 			}
-			// в новий масив в кінець (по індексу 10) пишеться ОДИНАДЦЯТИЙ елемент
+			
 			temp[length] = value;
-			delete[] data; // в цілях запобігання витокам пам'яті, чистимо пам'ять від старого масиву
-			data = temp; // переставляємо покажчик на новий масив
+			delete[] data;							// чистимо пам'ять від старого масиву
+			data = temp;							// переставляємо покажчик на новий масив
 		}
 		length++;
 	}
@@ -148,31 +149,52 @@ public:
 					
 				}
 				length--;
+				i--;
 				
-			}
-			
+			}			
 		}
-
 	}
 	
 	void Sort() {		//- метод сортує масив за зростанням
-	
+		sort(data, data + length);
 	} 
 	
 	void Reverse() {		//- метод змінює порядок слідуанн елементів на протилежний
-
-
+		reverse(data, data + length);
 	}
 	
 	void Shuffle() {	//- метод випадковим чином перемішує елементи в масиві
+		if (length < 2) return;
 
+		for (int i = length - 1; i > 0; i--) {
+			int rand_i = rand() % (i + 1);
+			swap(data[i], data[rand_i]);
+		}
 
 	}
 
 	// перевантажити:
-	// cout <<
-	// cin >> 
-	// []
+	
+	friend ostream& operator<<(ostream& out, const Vector& arr);	// перевантаження << (для сіауту)
+	friend static istream& operator>>(istream& in, Vector& arr);	// перевантаження >> (для сііну)
+	friend bool operator==(const Vector& arr1, const Vector& arr2);	// перевантаження == 
+	friend bool operator!=(const Vector& arr1, const Vector& arr2);	// перевантаження !=
+	
+	const int& operator[](unsigned int index) const {				// перевантаження []
+		if (index >= length) {
+			throw out_of_range("елемент за межами масиву");
+		}
+		return data[index];
+	}
+
+	int& operator[](unsigned int index) {
+		if (index >= length) {
+			throw out_of_range("елемент за межами масиву");
+		}
+		return data[index];
+	}
+	
+
 
 	void Print() const {
 		if (length == 0) {
@@ -199,6 +221,39 @@ public:
 	
 };
 
+bool operator==(const Vector& arr1, const Vector& arr2) {
+	for (int i = 0; i < arr1.Getlength(); i++) {
+		if (arr1.data[i] != arr2.data[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool operator!=(const Vector& arr1, const Vector& arr2) {
+	return !(arr1 == arr2);
+}
+
+ostream& operator<<(ostream& out, const Vector& arr) {
+	if (arr.Getlength() == 0) {
+		out << "Масив порожній";
+	}
+	else {
+		for (unsigned int i = 0; i < arr.Getlength(); i++) {
+			out << arr[i] << " ";
+		}
+	}
+	return out;
+}
+
+static istream& operator>>(istream& in, Vector& arr) {
+	int value;
+	in >> value;
+	arr.AddToBack(value);
+	return in;
+
+}
+
 int main() {
 	SetConsoleOutputCP(1251);
 	srand(time(0));
@@ -214,21 +269,54 @@ int main() {
 	a.RemoveFromBack();
 	a.AddToFront(0);
 	a.Print();
+
 	a.RemoveFromFront();
 	a.Print();
+
 	a.Insert(111, 5);
 	a.Print();
+
 	a.RemoveByIndex(0);
 	a.Print();
+
 	a.RemoveByValue(111);
 	a.Print();
-	a.AddToBack(2);
+
 	a.AddToBack(1);
-	a.AddToBack(2);
 	a.AddToBack(1);
-	a.AddToBack(2);	
+	a.AddToBack(1);
+	a.AddToBack(1);
+	a.AddToBack(1);	
 	a.Print();
 	a.RemoveByValue(1);
 	a.Print();
 
+	a.Sort();
+	a.Print();
+
+	a.Reverse();
+	a.Print();
+
+	a.Shuffle();
+	a.Print();
+
+	cout << a << "\n";
+	cin >> a;
+	cout << a;
+
+	Vector b;
+
+	for (int i = 0; i < 11; i++) {
+		b.AddToFront(i);
+
+	}
+	b.Print();
+
+	if (a == b) {
+		cout << "Масиви - рівні\n";
+	}
+
+	if (a != b) {
+		cout << "Масиви - не рівні\n";
+	}
 }
